@@ -7,4 +7,6 @@ import { AuthModule } from "../auth/auth.module";
   imports: [AuthModule],
   providers: [MessagingService, MessagingGateway]
 })
-export class MessagingModule {}
+export class MessagingModule {
+
+}

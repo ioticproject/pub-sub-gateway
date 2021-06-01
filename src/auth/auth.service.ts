@@ -1,42 +1,56 @@
 import { Injectable } from '@nestjs/common';
-import { Server } from "@nestjs/microservices";
 import Dict = NodeJS.Dict;
+import { TopicAccessDto } from "../messaging/dto/topic-access.dto";
 
 @Injectable()
 export class AuthService {
   private patterns: Dict<Array<string>> = {};
 
-  private match(token, pattern){
+  private match(token: string, pattern: string) {
+    pattern = pattern.replace("*","");
     let tokenPatterns = this.patterns[token] || [];
-    for(let tokenPattern of tokenPatterns){
-      if(pattern.includes(tokenPattern.replace("*",""))){
+    for (let tokenPattern of tokenPatterns) {
+      console.log(pattern + " " + tokenPattern);
+      if (pattern.includes(tokenPattern.replace("*", ""))) {
         return true;
       }
     }
     return false;
   }
 
-  canPublish(token: string, pattern: string): boolean {
-    return this.match(token, "sub." + pattern);
+  private checkInit(token) {
+    if (!this.patterns[token]){
+      this.patterns[token] = []
+    }
   }
 
-  canSubscribe(token: string, pattern: string): boolean {
+  canPublish({token, pattern}: TopicAccessDto): boolean {
     return this.match(token, "pub." + pattern);
   }
 
-  grantPublish(token: string, pattern: string){
+  canSubscribe({token, pattern}: TopicAccessDto): boolean {
+    return this.match(token, "sub." + pattern);
+  }
+
+  grantPublish({token, pattern}: TopicAccessDto){
+    this.checkInit(token);
+    this.revokePublish({token, pattern});
     this.patterns[token].push("pub." + pattern);
   }
 
-  grantSubscribe(token: string, pattern: string){
+  grantSubscribe({token, pattern}: TopicAccessDto){
+    this.checkInit(token);
+    this.revokeSubscribe({token, pattern});
     this.patterns[token].push("sub." + pattern);
   }
 
-  revokePublish(token: string, pattern: string) {
+  revokePublish({token, pattern}: TopicAccessDto) {
+    this.checkInit(token);
     this.patterns[token] = this.patterns[token].filter(it => it !== ("pub." + pattern));
   }
 
-  revokeSubscribe(token: string, pattern: string){
+  revokeSubscribe({token, pattern}: TopicAccessDto){
+    this.checkInit(token);
     this.patterns[token] = this.patterns[token].filter(it => it !== ("sub." + pattern));
   }
 

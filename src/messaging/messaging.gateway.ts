@@ -1,25 +1,54 @@
-import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
+import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway } from "@nestjs/websockets";
 import { AuthService } from "../auth/auth.service";
-import { Socket } from "net";
-import { TopicDto } from "./dto/topic.dto";
+import { TopicAccessDto } from "./dto/topic-access.dto";
 import { MessagingService } from "./messaging.service";
+import { Socket } from "dgram";
+import { PatternDataDto } from "./dto/pattern-data.dto";
 
-@WebSocketGateway()
+@WebSocketGateway(81)
 export class MessagingGateway {
   constructor(private authService: AuthService,
               private messagingService: MessagingService) {
   }
 
   @SubscribeMessage('subscribe')
-  subscribe(client: Socket, topic: TopicDto): any {
-    if(!this.authService.canSubscribe(topic.token, topic.pattern)){
-      return {event: "subscribe-fail"};
+  async subscribe(@ConnectedSocket() client: Socket, @MessageBody() topic: TopicAccessDto) {
+
+    if(!this.authService.canSubscribe(topic)){
+      client.send(JSON.stringify({
+        event: "error",
+        data: "Not authorized!"
+      }))
+      return;
     }
 
-    setInterval(() => {
-      client.emit("data", "first data!");
-    }, 2000);
+    let messagingService = this.messagingService;
+    messagingService.subscribe({
+      topicAccess: topic,
+      onTopicData(data: any) {
+        client.send(JSON.stringify({
+          event: "data",
+          data
+        }))
+      }
+    })
 
-    return {event: "subscribe-success"};
+    client.on("close", () => {
+      messagingService.unSubscribe(topic)
+    })
+  }
+
+  @SubscribeMessage('publish')
+  async publish(@ConnectedSocket() client: Socket, @MessageBody() patternDataAccess: AccessDto<any>) {
+    if(!this.authService.canPublish(patternDataAccess)){
+      console.log("Not authorized");
+      client.send(JSON.stringify({
+        event: "error",
+        data: "Not authorized!"
+      }))
+      return;
+    }
+
+    this.messagingService.publish(patternDataAccess)
   }
 }

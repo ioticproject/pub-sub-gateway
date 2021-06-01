@@ -1,4 +1,4 @@
-export interface PatternDataDto {
-  pattern: string,
+export interface TopicDataDto {
+  topic: string,
   data: any
 }
