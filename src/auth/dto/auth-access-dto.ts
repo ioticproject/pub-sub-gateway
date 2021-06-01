@@ -1,0 +1,3 @@
+interface AuthAccessDto {
+  secret: string
+}
