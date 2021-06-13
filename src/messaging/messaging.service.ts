@@ -5,6 +5,7 @@ import { TopicDataDto } from "./dto/topic-data.dto";
 
 interface TopicSubscriber {
   topicAccess: TopicAccessDto
+
   onTopicData(topicData: TopicDataDto)
 }
 
@@ -14,6 +15,12 @@ export class MessagingService {
   private topics = {};
 
   subscribe(subscriber: TopicSubscriber) {
+    if (this.subscribers.find(it =>
+      it.topicAccess.token == subscriber.topicAccess.token &&
+      it.topicAccess.pattern == subscriber.topicAccess.pattern)) {
+      return;
+    }
+
     this.subscribers.push(subscriber);
   }
 
@@ -24,17 +31,21 @@ export class MessagingService {
   }
 
   publish(patternData: PatternDataDto) {
-    if(!patternData.pattern.includes("*")){
-      this.topics[patternData.pattern] = true
+    if (!patternData.pattern.includes("*")) {
+      this.topics[patternData.pattern] = true;
     }
 
-    let pattern = patternData.pattern.replace("*","")
+    let pattern = patternData.pattern.replace("*", "");
 
-    for(let topic of Object.keys(this.topics)){
-      if(topic.includes(pattern)){
+    console.log(JSON.stringify(patternData));
+
+    for (let topic of Object.keys(this.topics)) {
+      if (topic.includes(pattern)) {
         for (let subscriber of this.subscribers) {
+          console.log("Match: " + subscriber.topicAccess.token + subscriber.topicAccess.pattern);
           if (topic.includes(subscriber.topicAccess.pattern.replace("*", ""))) {
-            subscriber.onTopicData({ topic, data: patternData.data});
+            console.log("Send: " + subscriber.topicAccess.token);
+            subscriber.onTopicData({ topic, data: patternData.data });
           }
         }
       }

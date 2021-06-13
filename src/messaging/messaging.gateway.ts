@@ -3,7 +3,6 @@ import { AuthService } from "../auth/auth.service";
 import { TopicAccessDto } from "./dto/topic-access.dto";
 import { MessagingService } from "./messaging.service";
 import { Socket } from "dgram";
-import { PatternDataDto } from "./dto/pattern-data.dto";
 
 @WebSocketGateway(81)
 export class MessagingGateway {
@@ -26,6 +25,7 @@ export class MessagingGateway {
     messagingService.subscribe({
       topicAccess: topic,
       onTopicData(data: any) {
+        console.log("Try send!")
         client.send(JSON.stringify({
           event: "data",
           data
