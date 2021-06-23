@@ -52,6 +52,15 @@ export class MqttConnector {
 
     this.server = createServer(this.broker.handle);
     this.server.listen(1337);
+
+    this.broker.on("clientError", (client, err) => {
+      console.log(err)
+    })
+
+    this.broker.on("connectionError", (client, err) => {
+      console.log(err)
+    })
+
     console.log("Server is listening");
   }
 

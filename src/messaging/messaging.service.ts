@@ -37,14 +37,10 @@ export class MessagingService {
 
     let pattern = patternData.pattern.replace("*", "");
 
-    console.log(JSON.stringify(patternData));
-
     for (let topic of Object.keys(this.topics)) {
       if (topic.includes(pattern)) {
         for (let subscriber of this.subscribers) {
-          console.log("Match: " + subscriber.topicAccess.token + subscriber.topicAccess.pattern);
           if (topic.includes(subscriber.topicAccess.pattern.replace("*", ""))) {
-            console.log("Send: " + subscriber.topicAccess.token);
             subscriber.onTopicData({ topic, data: patternData.data });
           }
         }
