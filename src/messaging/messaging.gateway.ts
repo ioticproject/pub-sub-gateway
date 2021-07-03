@@ -25,7 +25,6 @@ export class MessagingGateway {
     messagingService.subscribe({
       topicAccess: topic,
       onTopicData(data: any) {
-        console.log("Try send!")
         client.send(JSON.stringify({
           event: "data",
           data
